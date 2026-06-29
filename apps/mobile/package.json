@@ -1,0 +1,32 @@
+{
+  "name": "@elate/mobile",
+  "private": true,
+  "type": "module",
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@elate/api": "workspace:*",
+    "@elate/shared": "workspace:*",
+    "@tanstack/react-query": "5.101.2",
+    "@trpc/client": "11.18.0",
+    "@trpc/react-query": "11.18.0",
+    "expo": "56.0.12",
+    "expo-status-bar": "56.0.4",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-native": "0.86.0",
+    "react-native-web": "0.19.13",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.0.1",
+    "@types/react": "19.2.17",
+    "typescript": "6.0.3"
+  }
+}

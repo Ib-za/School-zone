@@ -1,0 +1,23 @@
+{
+  "name": "@elate/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@elate/shared": "workspace:*",
+    "@supabase/server": "^1.2.0",
+    "@supabase/supabase-js": "2.108.2",
+    "@trpc/server": "11.18.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "6.0.3"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@elate/public-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@elate/api": "workspace:*",
+    "@elate/shared": "workspace:*",
+    "@tanstack/react-query": "5.101.2",
+    "@trpc/client": "11.18.0",
+    "@trpc/react-query": "11.18.0",
+    "next": "16.2.9",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.3"
+  }
+}
