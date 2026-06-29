@@ -24,7 +24,7 @@ enable_google = false
 
 # Auto-confirm emails in development
 # Set to false in production
-auto_confirm = true`
+auto_confirm = true
 
 [storage]
 # File size limits (in bytes)

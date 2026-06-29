@@ -19,3 +19,4 @@ web-build
 *.log
 .design-docs
 .secrets
+supabase/.temp
