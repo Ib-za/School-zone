@@ -19,5 +19,8 @@
     "apps/*",
     "services/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "supabase": "^2.108.0"
+  }
 }
