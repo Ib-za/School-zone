@@ -61,6 +61,9 @@ export default async function AdminHome() {
             </div>
             <div className="link-row">
               {isPlatformAdmin ? <a href="/super-admin/onboarding">School onboarding</a> : null}
+              <a href="/setup">School setup</a>
+              <a href="/staff">Staff setup</a>
+              <a href="/students">Student setup</a>
               <a href="/supabase">Connection checks</a>
             </div>
           </div>

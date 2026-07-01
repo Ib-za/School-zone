@@ -1,54 +1,58 @@
 import { initTRPC } from "@trpc/server";
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  createAcademicYearInputSchema,
+  createBranchInputSchema,
+  createClassInputSchema,
+  createStaffInputSchema,
+  createStudentInputSchema,
+  createGradeInputSchema,
+  createSectionInputSchema,
+  createSubjectInputSchema,
   paginationInputSchema,
   superAdminAssociateStaffInputSchema,
   superAdminOnboardSchoolInputSchema,
   tenantScopedInputSchema
 } from "@elate/shared";
+import { requirePlatformAdmin, requireSchoolAdmin, requireSchoolOrBranchAdmin, requireSchoolStaff, requireUser } from "./authz";
 import type { ApiContext } from "./context";
 import { getPhase1AdminSnapshot, getPhase1SystemStatus } from "./services/phase1";
+import {
+  createAcademicYear,
+  createBranch,
+  createClass,
+  createGrade,
+  createSection,
+  createSubject,
+  getSetupSnapshot
+} from "./services/setup";
+import { createStaff, listStaff } from "./services/staff";
+import { createStudent, listStudents } from "./services/students";
 import { associateStaffUser, listOnboardedSchools, onboardSchool } from "./services/super-admin";
 
 const t = initTRPC.context<ApiContext>().create();
 const publicProcedure = t.procedure;
 const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.user) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "A valid Supabase bearer token is required."
-    });
-  }
+  const user = requireUser(ctx);
 
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user
+      user
     }
   });
 });
 const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
-  const staffRoles = new Set(["platform_admin", "school_admin", "branch_admin", "teacher"]);
-
-  if (!ctx.user.role || !staffRoles.has(ctx.user.role)) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "A staff role claim is required for this API route."
-    });
-  }
-
-  return next({ ctx });
+  return next({ ctx: { ...ctx, staff: requireSchoolStaff(ctx) } });
+});
+const schoolAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  return next({ ctx: { ...ctx, staff: requireSchoolAdmin(ctx) } });
+});
+const schoolOrBranchAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  return next({ ctx: { ...ctx, staff: requireSchoolOrBranchAdmin(ctx) } });
 });
 const platformAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "platform_admin") {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "A platform_admin role claim is required for this API route."
-    });
-  }
-
-  return next({ ctx });
+  return next({ ctx: { ...ctx, platformAdmin: requirePlatformAdmin(ctx) } });
 });
 
 export const appRouter = t.router({
@@ -95,6 +99,29 @@ export const appRouter = t.router({
     associateStaffUser: platformAdminProcedure
       .input(superAdminAssociateStaffInputSchema)
       .mutation(({ input }) => associateStaffUser(input))
+  }),
+  setup: t.router({
+    snapshot: staffProcedure.query(({ ctx }) => getSetupSnapshot(ctx.staff)),
+    createBranch: schoolAdminProcedure.input(createBranchInputSchema).mutation(({ ctx, input }) => createBranch(ctx.staff, input)),
+    createAcademicYear: schoolAdminProcedure
+      .input(createAcademicYearInputSchema)
+      .mutation(({ ctx, input }) => createAcademicYear(ctx.staff, input)),
+    createGrade: schoolAdminProcedure.input(createGradeInputSchema).mutation(({ ctx, input }) => createGrade(ctx.staff, input)),
+    createSection: schoolOrBranchAdminProcedure
+      .input(createSectionInputSchema)
+      .mutation(({ ctx, input }) => createSection(ctx.staff, input)),
+    createSubject: schoolAdminProcedure.input(createSubjectInputSchema).mutation(({ ctx, input }) => createSubject(ctx.staff, input)),
+    createClass: schoolOrBranchAdminProcedure
+      .input(createClassInputSchema)
+      .mutation(({ ctx, input }) => createClass(ctx.staff, input))
+  }),
+  staff: t.router({
+    list: staffProcedure.query(({ ctx }) => listStaff(ctx.staff)),
+    create: schoolAdminProcedure.input(createStaffInputSchema).mutation(({ ctx, input }) => createStaff(ctx.staff, input))
+  }),
+  students: t.router({
+    list: staffProcedure.query(({ ctx }) => listStudents(ctx.staff)),
+    create: schoolOrBranchAdminProcedure.input(createStudentInputSchema).mutation(({ ctx, input }) => createStudent(ctx.staff, input))
   }),
   tenantPreview: staffProcedure
     .input(tenantScopedInputSchema.extend({ pagination: paginationInputSchema.optional() }))

@@ -158,6 +158,143 @@ export const superAdminAssociateStaffInputSchema = z.object({
   contactPhone: z.string().trim().optional()
 });
 
+export const createBranchInputSchema = z.object({
+  name: z.string().trim().min(2),
+  address: z.string().trim().optional(),
+  timezone: z.string().trim().min(1).default("Asia/Kolkata"),
+  currency: z.string().trim().min(3).max(3).default("INR"),
+  phone: z.string().trim().optional(),
+  email: z.email().optional(),
+  principalName: z.string().trim().optional()
+});
+
+export const createAcademicYearInputSchema = z
+  .object({
+    label: z.string().trim().min(2),
+    startDate: z.iso.date(),
+    endDate: z.iso.date(),
+    isCurrent: z.boolean().default(false)
+  })
+  .superRefine((input, ctx) => {
+    if (input.startDate >= input.endDate) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["endDate"],
+        message: "Academic year end date must be after the start date."
+      });
+    }
+  });
+
+export const createGradeInputSchema = z.object({
+  label: z.string().trim().min(1),
+  sortOrder: z.number().int().min(0).default(0)
+});
+
+export const createSectionInputSchema = z.object({
+  branchId: z.uuid(),
+  label: z.string().trim().min(1)
+});
+
+export const createSubjectInputSchema = z.object({
+  name: z.string().trim().min(1),
+  subjectCode: z.string().trim().optional(),
+  displayOrder: z.number().int().min(0).default(0),
+  isOptional: z.boolean().default(false)
+});
+
+export const createClassInputSchema = z.object({
+  branchId: z.uuid(),
+  academicYearId: z.uuid(),
+  gradeId: z.uuid(),
+  sectionId: z.uuid()
+});
+
+export const createStaffInputSchema = z
+  .object({
+    mode: z.enum(["create", "existing"]),
+    authUserId: z.uuid().optional(),
+    email: z.email(),
+    password: z.string().min(8).optional(),
+    fullName: z.string().trim().min(2),
+    role: z.enum(["branch_admin", "teacher"]),
+    branchId: z.uuid(),
+    employeeCode: z.string().trim().optional(),
+    contactPhone: z.string().trim().optional(),
+    departmentId: z.uuid().optional(),
+    designationId: z.uuid().optional(),
+    joiningDate: z.iso.date().optional(),
+    qualifications: z.string().trim().optional(),
+    experienceNotes: z.string().trim().optional()
+  })
+  .superRefine((input, ctx) => {
+    if (input.mode === "create" && !input.password) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["password"],
+        message: "Password is required when creating a new staff user."
+      });
+    }
+
+    if (input.mode === "existing" && !input.authUserId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["authUserId"],
+        message: "Auth user ID is required when associating an existing staff user."
+      });
+    }
+  });
+
+export const parentRelationSchema = z.enum(["father", "mother", "guardian", "grandparent", "other"]);
+export const genderSchema = z.enum(["male", "female", "other", "prefer_not_to_say"]);
+
+export const createStudentInputSchema = z
+  .object({
+    branchId: z.uuid(),
+    classId: z.uuid(),
+    admissionNumber: z.string().trim().min(1),
+    fullName: z.string().trim().min(2),
+    dob: z.iso.date().optional(),
+    gender: genderSchema.optional(),
+    previousSchool: z.string().trim().optional(),
+    admissionDate: z.iso.date().optional(),
+    nationality: z.string().trim().optional(),
+    motherTongue: z.string().trim().optional(),
+    governmentIdNumber: z.string().trim().optional(),
+    emisNumber: z.string().trim().optional(),
+    rollNumber: z.string().trim().optional(),
+    transportRequired: z.boolean().default(false),
+    hostelRequired: z.boolean().default(false),
+    parent: z.object({
+      mode: z.enum(["create", "existing"]),
+      authUserId: z.uuid().optional(),
+      email: z.email(),
+      password: z.string().min(8).optional(),
+      fullName: z.string().trim().min(2),
+      contactPhone: z.string().trim().optional(),
+      relation: parentRelationSchema.default("guardian"),
+      isPrimaryContact: z.boolean().default(true),
+      pickupAllowed: z.boolean().default(true),
+      isEmergencyContact: z.boolean().default(true)
+    })
+  })
+  .superRefine((input, ctx) => {
+    if (input.parent.mode === "create" && !input.parent.password) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["parent", "password"],
+        message: "Password is required when creating a new parent user."
+      });
+    }
+
+    if (input.parent.mode === "existing" && !input.parent.authUserId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["parent", "authUserId"],
+        message: "Auth user ID is required when associating an existing parent user."
+      });
+    }
+  });
+
 export const phase1TableNames = [
   "schools",
   "branches",
@@ -190,3 +327,13 @@ export type Phase1Module = z.infer<typeof phase1ModuleSchema>;
 export type Phase1TableName = (typeof phase1TableNames)[number];
 export type SuperAdminOnboardSchoolInput = z.infer<typeof superAdminOnboardSchoolInputSchema>;
 export type SuperAdminAssociateStaffInput = z.infer<typeof superAdminAssociateStaffInputSchema>;
+export type CreateBranchInput = z.infer<typeof createBranchInputSchema>;
+export type CreateAcademicYearInput = z.infer<typeof createAcademicYearInputSchema>;
+export type CreateGradeInput = z.infer<typeof createGradeInputSchema>;
+export type CreateSectionInput = z.infer<typeof createSectionInputSchema>;
+export type CreateSubjectInput = z.infer<typeof createSubjectInputSchema>;
+export type CreateClassInput = z.infer<typeof createClassInputSchema>;
+export type CreateStaffInput = z.infer<typeof createStaffInputSchema>;
+export type ParentRelation = z.infer<typeof parentRelationSchema>;
+export type Gender = z.infer<typeof genderSchema>;
+export type CreateStudentInput = z.infer<typeof createStudentInputSchema>;
